@@ -1,0 +1,51 @@
+#!/usr/bin/env ruby
+
+require 'bundler/setup'
+require 'chunky_png'
+
+# パラメタの解析
+params = ARGV.getopts('d')
+
+unless params['d']
+  # エンコード (binary -> png) する場合
+
+  # 入力ファイルよりデータを読み込む
+  data = STDIN.read.unpack('C*')
+
+  # 出力する画像データを作成する
+  image_data = -> (data) do
+    # データを 4 バイトずつに区切る
+    sliced_data = data.each_slice(4).map{|b| (b + [0] * 3).shift(4).inject{|m, i| (m << 8) + i}}
+
+    # 先頭にデータのバイト数の情報を付加する
+    [data.size] + sliced_data
+  end.call(data)
+
+  # 出力する画像を正方形としたとき，
+  # データを表現できる最小の一辺の長さを求める
+  side_len = Math.sqrt(image_data.size).ceil
+
+  # 画像を作成する
+  png = ChunkyPNG::Image.new(side_len, side_len, ChunkyPNG::Color::WHITE)
+  image_data.each.with_index do |pxl, idx|
+    png[idx % side_len, idx / side_len] = pxl
+  end
+
+  # 画像を出力する
+  png.write(STDOUT, :interface => true)
+else
+  # デコード (png -> binary) する場合
+
+  # 入力ファイルより画像を読み込む
+  png = ChunkyPNG::Image.from_io(STDIN)
+
+  # データの取り出し
+  data = Array.new(((png[0, 0] + 1) / 4.0).ceil) do |idx|
+    pxl = png[idx % png.width, idx / png.width]
+    Array.new(4){|i| (pxl >> (i * 8)) & 0xff}.reverse
+  end.drop(1).flatten
+
+  # 出力ファイルへデータの書き込み
+  STDOUT.write(data.pack('C*'))
+end
+
