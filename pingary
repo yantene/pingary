@@ -22,18 +22,17 @@ unless params['d']
     [data.size] + sliced_data
   end.call(data)
 
-  # 出力する画像を正方形としたとき，
-  # データを表現できる最小の一辺の長さを求める
-  side_len = Math.sqrt(image_data.size).ceil
+  # 出力する画像を正方形として考え，その横幅を算出
+  width = Math.sqrt(image_data.size).ceil
 
   # 画像を作成する
-  png = ChunkyPNG::Image.new(side_len, side_len, ChunkyPNG::Color::WHITE)
+  png = ChunkyPNG::Image.new(width, (image_data.size / width.to_f).ceil)
   image_data.each.with_index do |pxl, idx|
-    png[idx % side_len, idx / side_len] = pxl
+    png[idx % width, idx / width] = pxl
   end
 
   # 画像を出力する
-  png.write(STDOUT, :interface => true)
+  png.write(STDOUT)
 else
   # デコード (png -> binary) する場合
 
@@ -41,7 +40,7 @@ else
   png = ChunkyPNG::Image.from_io(STDIN)
 
   # データの取り出し
-  data = Array.new(((png[0, 0] + 1) / 4.0).ceil) do |idx|
+  data = Array.new((png[0, 0] / 4.0).ceil + 1) do |idx|
     pxl = png[idx % png.width, idx / png.width]
     Array.new(4){|i| (pxl >> (i * 8)) & 0xff}.reverse
   end.drop(1).flatten
