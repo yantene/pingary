@@ -13,6 +13,25 @@ pingary は，
 名前は `png` + `binary` からのかばん語です．
 もうすこしまともな命名はできなかったのかという指摘はご勘弁ください．
 
+## Setup
+
+本ソフトウェアは `ChunkyPNG` Gem を使用しています．
+何らかの手段でインストールを行ってください．
+ここでは， `bundler` を用いた手段を説明します．
+
+まず， `bundler` がインストールされていない場合には，インストールを行ってください．
+
+```bash
+gem install bundler
+```
+
+次に，リポジトリ内にて，
+以下のコマンドをおもむろに実行してください．
+
+```bash
+bundle install --path vendor/bundle
+```
+
 ## Usage
 
 ### Encode
@@ -38,5 +57,4 @@ cat ./sound.ogg | ./pingary > ./sound.png
 ```bash
 cat ./sound.png | ./pingary -d > ./sound.ogg
 ```
-
 とすることで， デコードされたデータ `sound.ogg` を生成することができます．
